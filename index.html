@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="style/style.css">
+
+    <style type="text/css" media="print">
+        .noprint {
+            display: none
+        }
+        
+        .print {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header class="el-header noprint">
+            <div class="icon-btns">
+                <i class="icon-list" @click="changeLeftMenu"></i>
+                <i class="icon-skip_previous" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('first')"></i>
+                <i class="icon-play_arrow prev-icon" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('prev')"></i>
+                <i class="icon-play_arrow" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('next')"></i>
+                <i class="icon-skip_next" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('last')"></i>
+                <select v-model="currentPage">
+                    <option v-for="page in pageNum" v-bind:value="page">page {{ page }}</option>
+                </select>
+                <i class="icon-zoom_in" v-bind:class="{'disabled': zoomNum == 2}" @click="modifyZoom('in')"></i>
+                <select v-model="zoomNum">
+                    <option value="0.5">50%</option>
+                    <option value="0.6">60%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.8">80%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1.0" selected>100%</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.3">130%</option>
+                    <option value="1.4">140%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.6">160%</option>
+                    <option value="1.7">170%</option>
+                    <option value="1.8">180%</option>
+                    <option value="1.9">190%</option>
+                    <option value="2.0">200%</option>
+                </select>
+                <i class="icon-zoom_out" v-bind:class="{'disabled': zoomNum == 0.5}" @click="modifyZoom('out')"></i>
+                <i class="icon-format_align_left" @click="textAlign = 'left'"></i>
+                <i class="icon-format_align_center" @click="textAlign = 'center'"></i>
+                <i class="icon-format_align_right" @click="textAlign = 'right'"></i>
+                <i class="icon-print" @click="window.print()"></i>
+            </div>
+        </header>
+
+        <aside class="noprint" width="240px" v-show="ifMenuShow">
+            <nav class="tabNav">
+                <ul>
+                    <li v-bind:class="{ 'curr': currentNav == 0 }" @click="currentNav = 0">Page</li>
+                    <li v-bind:class="{ 'curr': currentNav == 1 }" @click="currentNav = 1">Bookmark</li>
+                </ul>
+
+                <div class="clear"></div>
+            </nav>
+
+            <div class="tab-conent scrollbar" v-bind:style="{ height: asideHeight + 'px' }">
+
+            <section v-show="currentNav == 0">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-file-text2"></i> page {{ page }}</li>
+                </ul>
+            </section>
+
+            <section v-show="currentNav == 1">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-turned_in_not"></i> Bookmark {{ page }}</li>
+                </ul>
+            </section>
+        </div>
+
+        </aside>
+        <div class="main scrollbar noprint"  v-bind:style="{ height: mainHeight + 'px' }" v-bind:class="{ 'mainLeftM': ifMenuShow, 'aleft': textAlign === 'left','acenter': textAlign === 'center','aright': textAlign === 'right'}">
+            <div class="conent" v-html="pageContent" v-bind:style="zoomStyle"></div>
+
+            <div class="clear"></div>
+        </div>
+
+        <!--专门只为打印的内容-->
+        <div class="conent print" style="display:none" v-html="pageContent"></div>
+    </div>
+</body>
+<!-- 先引入 Vue -->
+<script src="js/vue.min.js"></script>
+<script>
+
+var app = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                // visible: false,
+                isCollapse: false,
+                currentNav: 0,
+                activeName2: 'first',
+                pageNum: 1, 
+                currentPage: 1,
+                pageContent: '',
+                asideHeight: 300,
+                mainHeight: 300,
+                ifMenuShow: true,
+                zoomNum: '1.0',
+                textAlign: 'left',
+                zoomStyle: {},
+                pageDatas: ['<div style="position:absolute;top:-0.000081px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00001.jpg"/></nobr></div><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:179.903976px;left:236.840607px"><nobr>ATM </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:213.200363px;left:129.854538px"><nobr>1.Pilih menu Lain </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:229.522385px;left:129.854538px"><nobr>2.Transfer </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:245.684326px;left:129.854538px"><nobr>3.Transaksi lainnya </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:262.006195px;left:129.854538px"><nobr>4.Pilih ‘Rekening BNI ’ </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:278.328125px;left:129.854538px"><nobr>5.Masukan VA debitur </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:294.490082px;left:129.854538px"><nobr>6.Masukan total tagihan debitur </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:310.812012px;left:129.854538px"><nobr>7.Konfirmasi pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:345.843658px;left:341.747711px"><nobr>INTERNET BANKING </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:379.140137px;left:129.374786px"><nobr>1.Pilih ‘Transaksi ’ </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:395.462067px;left:129.374786px"><nobr>2.Pilih ‘Info &amp; Administrasi transfer ’ </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:411.624023px;left:129.374786px"><nobr>3.Pilih ‘Atur rekening tujuan ’ </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:427.945953px;left:129.374786px"><nobr>4.Tambahkan rekening tujuan , lalu ok </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:444.267822px;left:129.374786px"><nobr>5.Isi data debitur, lalu tekan lanjutkan </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:460.429749px;left:129.374786px"><nobr>6.Konfirmasi data customer, masukan 8 digit angka yang dihasilkan dari APPLI 2 pada token BNI </nobr></span><span style="position:absolute;top:476.911682px;left:129.374786px"><nobr>debitur </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:493.072266px;left:129.374786px"><nobr>7.Pilih Transfer </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:509.394257px;left:129.374786px"><nobr>8.Pilih transfer ke rekening BNI, lalu lengkapi data semua data, kemudian tekan lanjutkan </nobr></span><span style="position:absolute;top:525.717468px;left:129.374786px"><nobr>9.Konfirmasi pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:564.908386px;left:347.503479px"><nobr>MOBILE BANKING </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:598.204773px;left:129.854538px"><nobr>1.Transfer </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:614.528015px;left:129.854538px"><nobr>2.Transfer ke sesame BNI </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:630.849976px;left:129.854538px"><nobr>3.Isi kolom “REKENING DEBET ” lalu klik menu “KE REKENING ” </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:647.010498px;left:129.854538px"><nobr>4.Pilih menu “AD HOC BENEFICIARY ” </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:663.333801px;left:129.854538px"><nobr>5.Lengkapi data dengan mengisi, NAMA, NO VIRTUAL ACCOUNT DAN ALAMAT EMAIL BENEFICIARY </nobr></span><span style="position:absolute;top:679.655762px;left:129.854538px"><nobr>6.Konfirmasi akan muncul kemudian klik “LANJUTKAN ” </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:695.977722px;left:129.854538px"><nobr>7.Isi semua form yang ada lalu klik “LANJUTKAN </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:712.139648px;left:129.854538px"><nobr>8.Rincian konfirmasi muncul dengan meminta password transaksi, setelah selesai </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:728.461609px;left:129.854538px"><nobr>klik “LANJUTKAN ” </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:179.423904px;left:497.827698px"><nobr>ATM BERSAMA </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:212.880371px;left:420.108246px"><nobr>1.Pilih menu TRANSFER </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:229.042236px;left:420.108246px"><nobr>2.Pilih menu Transfer Ke bank lain </nobr></span><span style="position:absolute;top:245.362869px;left:420.108246px"><nobr>3.Masukan/Pilih kode bank tujuan </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:261.686188px;left:420.108246px"><nobr>4.Masukan VA customer </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:277.848145px;left:420.108246px"><nobr>5.Konfirmasi rincian data </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:294.168701px;left:420.108246px"><nobr>6.Masukan nominal tagihan </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:310.491943px;left:420.108246px"><nobr>7.Konfirmasi pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:21.949999px;font-weight:bold;color:#000000;"><span style="position:absolute;top:48.064289px;left:232.682693px"><nobr>FAQ PEMBAYARAN OPTIMA </nobr></span></span></p>','<div style="position:absolute;top:-0.000081px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00002.jpg"/></nobr></div><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:131.098145px;left:275.221252px"><nobr>ATM </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:164.394608px;left:122.816757px"><nobr>1.Tekan lainnya </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:180.716553px;left:122.816757px"><nobr>2.Pilih Pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:197.038498px;left:122.816757px"><nobr>3.Pilih multipayment </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:213.200363px;left:122.816757px"><nobr>4.Masukan kode perusahaan 89251 </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:229.522385px;left:122.816757px"><nobr>5.Masukan VA Customer yang tertera diaplikasi </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:245.844315px;left:122.816757px"><nobr>6.Masukan nominal yang tertera diaplikasi </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:262.164948px;left:122.816757px"><nobr>7.Setelah muncul data customer , pilih nomor 1 dan tekan YA </nobr></span><span style="position:absolute;top:278.488190px;left:122.816757px"><nobr>8. Konfirmasi pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:315.440033px;left:344.146545px"><nobr>INTERNET BANKING </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:348.896484px;left:121.858574px"><nobr>1.Pilih pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:365.218414px;left:121.858574px"><nobr>2.Multipayment </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:381.379059px;left:121.858574px"><nobr>3.No rekening customer </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:397.702240px;left:121.858574px"><nobr>4.Pilih kode perusahaan 89251 </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:414.024261px;left:121.858574px"><nobr>5.Masukan VA customer </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:430.184814px;left:121.858574px"><nobr>6.Arahkan ke halaman konfirmasi </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:446.508057px;left:121.858574px"><nobr>7.Jika data customer benar , Klik tombol tagihan lalu tekan Lanjutkan </nobr></span><span style="position:absolute;top:462.830017px;left:121.858574px"><nobr>8.Arahkan ke halaman konfirmasi 2 </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:479.151917px;left:121.858574px"><nobr>9.Masukan challenge code customer (Token) </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:495.313904px;left:121.858574px"><nobr>10.Konfirmasi pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:532.105774px;left:350.383362px"><nobr>MOBILE BANKING </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:565.400879px;left:121.858574px"><nobr>1.Pilih menu pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:581.724121px;left:121.858574px"><nobr>2.Buat pembayaran baru </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:598.046082px;left:121.858574px"><nobr>3.Multipayment </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:614.206665px;left:121.858574px"><nobr>4.Masukan kode perusahaan 89251 </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:630.529907px;left:121.858574px"><nobr>5.Masukan VA customer </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:646.851868px;left:121.858574px"><nobr>6.Masuk VA customer dengan 89251 sebagai kode perusahaan </nobr></span><span style="position:absolute;top:663.173767px;left:121.858574px"><nobr>7.Tambahkan menjadi sebagai nomor baru </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:679.335693px;left:121.858574px"><nobr>8.Masukan ‘NOMINAL ’ lalu pilih ‘KONFIRMASI ’ </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:695.657715px;left:121.858574px"><nobr>9.Pilih ‘LANJUTKAN ’ lalu ‘KONFIRMASI ’ kembali </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:132.698318px;left:538.287354px"><nobr>ATM BERSAMA </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:166.153564px;left:489.673126px"><nobr>1.Pilih menu TRANSFER </nobr></span><span style="position:absolute;top:182.476730px;left:489.673126px"><nobr>2.Pilih menu Transfer Ke bank </nobr></span><span style="position:absolute;top:198.638748px;left:489.673126px"><nobr>lain </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:214.959305px;left:489.673126px"><nobr>3.Masukan/Pilih kode bank </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:231.282639px;left:489.673126px"><nobr>tujuan </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:247.444504px;left:489.673126px"><nobr>4.Masukan VA customer </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:263.765137px;left:489.673126px"><nobr>5.Konfirmasi rincian data </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:280.088379px;left:489.673126px"><nobr>6.Masukan nominal tagihan </nobr></span></span></p>','<div style="position:absolute;top:-0.000081px;left:0.000000px"><nobr><img height="1123.000000" width="794.000000" src ="bgimg/bg00003.jpg"/></nobr></div><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:115.256264px;left:225.326385px"><nobr>ATM </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:148.712723px;left:90.832870px"><nobr>1.Pilih Transaksi Lainnya </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:164.874680px;left:90.832870px"><nobr>2.Pilih Pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:181.196609px;left:90.832870px"><nobr>3.Pilih Pembayaran Lain-lain </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:197.518555px;left:90.832870px"><nobr>4.Pilih Virtual Account </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:213.680496px;left:90.832870px"><nobr>5.Masukkan 16 digit kode bayar Contoh: </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:230.002441px;left:90.832870px"><nobr>70519 –xxxxxxxx </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:246.324387px;left:90.832870px"><nobr>6.Konfirmasi rincian data , konfirmasi pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:329.841705px;left:189.024704px"><nobr>MOBILE BANKING </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:363.298248px;left:90.832870px"><nobr>1.Pilih Pembayaran TAGIHAN </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:379.620209px;left:90.832870px"><nobr>2.Pilih Virtual Account </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:395.780853px;left:90.832870px"><nobr>3.Masukkan 16 digit kode bayar Contoh: </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:412.104004px;left:90.832870px"><nobr>70519 –xxxxxxxx </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:428.425934px;left:90.832870px"><nobr>4.Masukkan nominal pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:444.586548px;left:90.832870px"><nobr>5.Muncul konfirmasi pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:460.909729px;left:90.832870px"><nobr>6.Masukan otentikasi transaksi atau Token </nobr></span><span style="position:absolute;top:477.231720px;left:90.832870px"><nobr>7.Transaksi selesai </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:329.361664px;left:507.104340px"><nobr>INTERNET BANKING </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:362.656830px;left:424.106201px"><nobr>1.Pilih Pembayaran Tagihan </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:378.978760px;left:424.106201px"><nobr>2.Pilih Virtual Account </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:395.302094px;left:424.106201px"><nobr>3.Masukan VA customer </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:411.463959px;left:424.106201px"><nobr>4.Masukkan nominal pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:427.784515px;left:424.106201px"><nobr>5.Muncul konfirmasi pembayaran </nobr></span><span style="position:absolute;top:444.107788px;left:424.106201px"><nobr>6.Masukan otentikasi transaksi atau Token </nobr></span><span style="position:absolute;top:460.429749px;left:424.106201px"><nobr>7.Transaksi selesai </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:114.774902px;left:521.337158px"><nobr>ATM BERSAMA </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:148.232666px;left:428.104218px"><nobr>1.Pilih menu TRANSFER </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:164.394608px;left:428.104218px"><nobr>2.Pilih menu Transfer Ke bank lain </nobr></span><span style="position:absolute;top:180.716553px;left:428.104218px"><nobr>3.Masukkan 16 digit kode bayar Contoh: </nobr></span><span style="position:absolute;top:197.038498px;left:428.104218px"><nobr>70519 –xxxxxxxx </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:213.200363px;left:428.104218px"><nobr>4.Masukkan nominal pembayaran </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:229.522385px;left:428.104218px"><nobr>5.Muncul konfirmasi pembayaran </nobr></span><span style="position:absolute;top:245.844315px;left:428.104218px"><nobr>6.Masukan otentikasi transaksi atau Token </nobr></span><span style="position:absolute;top:262.164948px;left:428.104218px"><nobr>7.Transaksi selesai </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:615.955811px;left:371.332794px"><nobr>ALFAMART </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:632.930176px;left:97.870667px"><nobr>1. Kunjungi toko Alfa Group terdekat (Alfamrt). </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:649.252197px;left:97.870667px"><nobr>2. Beritahu kasir bahwa Anda ingin melakukan pembayaran melalui Optima. </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:665.574036px;left:97.870667px"><nobr>3. Siapkan kode pembayaran Anda (terdiri dari ET88 dan 1-6 digit angka yang bisa Anda dapatkan pada </nobr></span><span style="position:absolute;top:681.736084px;left:126.336319px"><nobr>aplikasi atau melalui Layanan Pelanggan Optima). </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:698.057922px;left:97.870667px"><nobr>4. Pastikan jumlah yang dibayar benar, sesuai dengan yang tertera pada aplikasi Optima. </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:714.380005px;left:97.870667px"><nobr>5. Bayar melalui kasir dan dapatkan struk sebagai bukti pembayaran Anda. </nobr></span></span></p><p><span style="font-family:Calibri;font-size:9.950000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:730.541809px;left:97.870667px"><nobr>6. Proses ini membutuhkan waktu kurang lebih 1 jam, setelah itu Optima akan menerima pemberitahuan </nobr></span><span style="position:absolute;top:746.863770px;left:126.336319px"><nobr>status pembayaran Anda. </nobr></span></span></p>','']
+            }
+        },
+        mounted: function() {
+            this.$nextTick(function() {
+                this.pageNum = this.pageDatas.length;
+                this.pageContent = this.pageDatas[0];
+
+                this.setLeftMenuHeight();
+            })
+        },
+        watch: {
+            'currentPage': function(newVal, oldValue) {
+                // console.log('newVal ' + newVal, 'oldValue ' + oldValue);
+                if (newVal) {
+                    this.pageContent = this.pageDatas[this.currentPage - 1];
+                }
+            },
+            'zoomNum': function(newVal, oldValue) {
+                if (newVal) {
+                    this.zoomStyle = {
+                        'transform': 'scale(' + newVal + ')',
+                        '-webkit-transform': 'scale(' + newVal + ')',
+                        '-ms-transform': 'scale(' + newVal + ')',
+                        '-moz-transform': 'scale(' + newVal + ')',
+                        '-o-transform': 'scale(' + newVal + ')'
+                    }
+                }
+            }
+        },
+        methods: {
+            
+            changeCurrentPage: function(methods) {
+                switch (methods) {
+                    case 'first':
+                        this.currentPage = 1;
+                        break;
+                    case 'prev':
+                        if (this.currentPage > 1) {
+                            this.currentPage -= 1;
+                        }
+                        break;
+                    case 'next':
+                        if (this.currentPage < this.pageNum) {
+                            this.currentPage += 1;
+                        }
+                        break;
+                    case 'last':
+                        this.currentPage = this.pageNum;
+                        break;
+                }
+            },
+
+            gotoPage: function(page) {
+                console.log(page);
+                this.currentPage = page;
+            },
+            modifyZoom: function(type) {
+                switch (type) {
+                    case 'in':
+                        if (this.zoomNum < 2) {
+                            // this.zoomNum = (this.zoomNum + 0.1).toFixed(1);
+                            this.zoomNum = (parseFloat(this.zoomNum) + 0.1).toFixed(1);
+                        }
+                        break;
+                    case 'out':
+                        if (this.zoomNum > 0.5) {
+                            this.zoomNum = (parseFloat(this.zoomNum) - 0.1).toFixed(1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                console.log(this.zoomNum);
+            },
+            setLeftMenuHeight: function() {
+                // this.asideHeight = document.body.scrollHeight - 60;
+                this.mainHeight = document.documentElement.clientHeight - 60 - 20;
+                // 60为头部导航高度， 46为menu高度， 40为上下padding
+                this.asideHeight = this.mainHeight - 20 - 46;
+            },
+            changePage: function(page) {
+                this.currentPage = page;
+                // this.pageContent = this.pageDatas[page - 1];
+            },
+            changeLeftMenu: function() {
+                this.ifMenuShow = !this.ifMenuShow;
+            }
+        }
+    });
+
+function gotoPage(page) {
+    console.log(page);
+    app.gotoPage(page);
+}
+
+</script>
+
+</html>
